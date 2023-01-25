@@ -24,10 +24,14 @@ class CrawlerController extends Controller
     public function select_pages($linklist) {
 
         for($i = 0; $i < $linklist->length; $i++) {
+
+            //Limit to six pages
             if(count($this->pagesToCrawl) == 6) {
                 break;
             }
             $l =  $linklist[$i]->getAttribute("href");
+
+            // Process all of the links we find.
             if (substr($l, 0, 1) == "/" && substr($l, 0, 2) != "//") {
                 $l = parse_url($this->entry_point)["scheme"]."://".parse_url($this->entry_point)["host"].$l;
             } else if (substr($l, 0, 2) == "//") {
@@ -79,6 +83,7 @@ class CrawlerController extends Controller
         }
     
         $title = $doc->getElementsByTagName("title");
+
         // There should only be one <title> on each page, so the array should have only 1 element.
         $title = $title->item(0) === NULL? "" : $title->item(0)->nodeValue;
     
@@ -121,21 +126,18 @@ class CrawlerController extends Controller
         // to PHP's DOMDocument class.
         @$doc->loadHTML(@file_get_contents($this->entry_point, false, $context));
 
+         
         // Create an array of all of the links to the pages to be selected for crawling.
         $linklist = $doc->getElementsByTagName("a");
 
-        // Loop through all of the links we find and select 6 links to different pages,
-        // excluding links starting with an "#".
-
         $this->select_pages($linklist);
 
+        //Get page data
         foreach ($this->pagesToCrawl as $page) {
             $this->get_page_data($page);
         }
 
-        // print_r(count(array_unique($this->allPagesImages))."<br>");
-        // print_r(count($this->allPagesLinks)."<br>");
-
+        //check if a link is an external or internal by checking for the domain name
         foreach($this->allPagesLinks as $link) {
             if(strpos($link, 'http') !== false && strpos($link, $this->domain_name) == false) {
                 $this->externalLinks[] = $link;
@@ -156,6 +158,8 @@ class CrawlerController extends Controller
 
         $averageLoadTime = $totalTime / 6;
 
+
+        //Average word couunt
         $averageWordCount = 0;
         $totalWordCount = 0;
 
@@ -165,6 +169,7 @@ class CrawlerController extends Controller
 
         $averageWordCount = $totalWordCount / 6;
 
+        //Average title length
         $averageTitleLength = 0;
         $totalTitleLength = 0;
         
