@@ -40,10 +40,12 @@ class CrawlerController extends Controller
             } else if (substr($l, 0, 2) == "./") {
                 $l = parse_url($this->entry_point)["scheme"]."://".parse_url($this->entry_point)["host"].dirname(parse_url($this->entry_point)["path"]).substr($l, 1);
             } else if (substr($l, 0, 1) == "#") {
+                //skip links pointing to a section on the same page
                 continue;
             } else if (substr($l, 0, 3) == "../") {
                 $l = parse_url($this->entry_point)["scheme"]."://".parse_url($this->entry_point)["host"]."/".$l;
             } else if (substr($l, 0, 11) == "javascript:") {
+                //skip links that runs javascript
                 continue;
             } else if (substr($l, 0, 5) != "https" && substr($l, 0, 4) != "http") {
                 $l = parse_url($this->entry_point)["scheme"]."://".parse_url($this->entry_point)["host"]."/".$l;
@@ -60,23 +62,28 @@ class CrawlerController extends Controller
 
     public function get_page_data($url) {
 
-        // The array that we pass to stream_context_create() to modify the User Agent.
+        // The array that will be passed to stream_context_create() to modify the User Agent.
         $options = array('http'=>array('method'=>"GET", 'headers'=>"User-Agent: YusufCrawler/0.1\n"));
+
         // Create the stream context.
         $context = stream_context_create($options);
         $doc = new \DOMDocument();
-    
+        
         $start = microtime(true);
     
         $getContent = file_get_contents($url, false, $context);
-    
+        
+        //Get the page load time
+        $this->pageLoadTime[] = microtime(true)-$start;
+        
+        //Get the status code
         $statusCode = explode(" ", $http_response_header[0])[1];
         
         $this->pageStatusCodes[] = $statusCode;
     
         $this->pageWordCount[] = str_word_count(strip_tags(strtolower($getContent)));
     
-        $this->pageLoadTime[] = microtime(true)-$start;
+        
     
         
         if(!empty(@$getContent)) {
@@ -115,7 +122,7 @@ class CrawlerController extends Controller
     public function crawl_pages() {
         
         // The array that we pass to stream_context_create() to modify our User Agent.
-        $options = array('http'=>array('method'=>"GET", 'headers'=>"User-Agent: howBot/0.1\n"));
+        $options = array('http'=>array('method'=>"GET", 'headers'=>"User-Agent: YusufCrawler/0.1\n"));
 
         // Create the stream context.
         $context = stream_context_create($options);
@@ -138,7 +145,7 @@ class CrawlerController extends Controller
             $this->get_page_data($page);
         }
 
-        //check if a link is an external or internal by checking for the domain name
+        //check if a link is an external or internal by checking for the domain name and the protocol.
         foreach($this->allPagesLinks as $link) {
             if(strpos($link, 'http') !== false && strpos($link, $this->domain_name) == false) {
                 $this->externalLinks[] = $link;
