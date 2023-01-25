@@ -9,6 +9,7 @@ class CrawlerController extends Controller
 
     public $entry_point = "https://agencyanalytics.com/";
     public $domain_name = "agencyanalytics.com";
+    public $numberOfPages = 6;
 
     public $pagesToCrawl = array();
     public $allPagesLinks = array();
@@ -26,7 +27,7 @@ class CrawlerController extends Controller
         for($i = 0; $i < $linklist->length; $i++) {
 
             //Limit to six pages
-            if(count($this->pagesToCrawl) == 6) {
+            if(count($this->pagesToCrawl) == $this->numberOfPages) {
                 break;
             }
             $l =  $linklist[$i]->getAttribute("href");
