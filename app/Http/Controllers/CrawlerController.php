@@ -20,6 +20,7 @@ class CrawlerController extends Controller
     public $pageWordCount = array();
     public $pageTitleLength = array();
     public $pageStatusCodes = array();
+    public $protocol = 'https';
 
 
     public function select_pages($linklist) {
@@ -108,7 +109,7 @@ class CrawlerController extends Controller
         }
     
         foreach($pageImages as $image) {
-            $i = $image->getAttribute("data-src");
+            $i = $image->getAttribute("src");
             $this->allPagesImages[] = $i;
         }
     
@@ -147,7 +148,7 @@ class CrawlerController extends Controller
 
         //check if a link is an external or internal by checking for the domain name and the protocol.
         foreach($this->allPagesLinks as $link) {
-            if(strpos($link, 'http') !== false && strpos($link, $this->domain_name) == false) {
+            if(strpos($link, $this->protocol) !== false && strpos($link, $this->domain_name) == false) {
                 $this->externalLinks[] = $link;
             }
             else {
@@ -164,7 +165,7 @@ class CrawlerController extends Controller
             $totalTime += $loadTime;
         }
 
-        $averageLoadTime = $totalTime / 6;
+        $averageLoadTime = $totalTime / $this->numberOfPages;
 
 
         //Average word couunt
@@ -175,7 +176,7 @@ class CrawlerController extends Controller
             $totalWordCount += $wordCount;
         }
 
-        $averageWordCount = $totalWordCount / 6;
+        $averageWordCount = $totalWordCount / $this->numberOfPages;
 
         //Average title length
         $averageTitleLength = 0;
@@ -185,7 +186,7 @@ class CrawlerController extends Controller
             $totalTitleLength += $titleLength;
         }
 
-        $averageTitleLength = $totalTitleLength / 6;
+        $averageTitleLength = $totalTitleLength / $this->numberOfPages;
         $allStatusCodes = $this->pageStatusCodes;
         $uniqueInternalLinks = count(array_unique($this->internalLinks));
         $uniqueExternalLinks = count(array_unique($this->externalLinks));
